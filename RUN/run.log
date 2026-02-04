@@ -1,0 +1,15 @@
+stretching 40.0
+type_eddy -1.0
+dy 500.0
+H_eddy 200.0
+V0_eddy 0.5
+ngrid_y 400.0
+Lx 200000.0
+Lz 4000.0
+dx 500.0
+ngrid_z 100.0
+R_eddy 10000.0
+power_shape 20.0
+refinement 4.0
+Ly 200000.0
+ngrid_x 400.0

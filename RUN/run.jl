@@ -39,7 +39,7 @@ end
 experiment = ARGS[1]
 run_time = 360days
 save_fields_interval = 24hour
-path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V1/"
+path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V2/"
 
 
 
@@ -81,13 +81,12 @@ println("**************************")
 println("GO")
 
 
-rewrite = true #true#true #it has to be true the first time we run it !!!!
-pickup = true#it has to be false if we want to re-write and re-start from beggining
+rewrite = ARGS[2] #true #it has to be true the first time we run it !!!!
+pickup = ARGS[3] #it has to be false if we want to re-write and re-start from beggining
 
 ##### ##### ##### ##### ##### ##### ##### 
 ##### Vertical spacing of Z ##### ##### 
 ##### ##### ##### ##### ##### ##### ##### 
-
 
 
 # Normalized height ranging from 0 to 1
@@ -123,13 +122,28 @@ no_slip_bc = ValueBoundaryCondition(0.0)
 no_slip_field_bcs = FieldBoundaryConditions(no_slip_bc);
 
 #-----#
-z₀ = 0.01 # m (roughness length)
-κ = 0.4  # von Karman constant
-z₁ = CUDA.@allowscalar -last(znodes(grid, Center())) # Closest grid center to the bottom
 
-# Drag coefficient
-#cᴰ = (κ / log(z₁ / z₀))^2 
 cᴰ = 0 
+
+if experiment == "idksomewithdrag"
+    
+    z₀ = 0.01 # m (roughness length) ###the one we vary
+    κ = 0.4  # von Karman constant
+    z₁ = CUDA.@allowscalar -last(znodes(grid, Center())) # Closest grid center to the bottom
+    # Drag coefficient
+    cᴰ = (κ / log(z₁ / z₀))^2 
+    println("some drag")
+#elseif experiment == "test1_window"
+    # Do something else
+#    println("Running test1_window")
+else
+    cᴰ = 0 
+    println("No drag")
+end
+
+
+
+
 
 Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
@@ -167,23 +181,24 @@ edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=thresho
 damping = Relaxation(rate = 1/100, mask=edge_mask)
 coriolis = FPlane(f=0.000143) #value at lat=80°N
 
-#Pr = 1.0    # Prandtl number
-#Ra = 1e8    # Rayleigh number
-#b★ = 1.0
-#ν = sqrt(Pr * b★ * Lx^3 / Ra)  # Laplacian viscosity
-#κ = ν * Pr                     # Laplacian diffusivity
+
+
+if experiment == "idksomewithotherclosure"
+    ν = 1e-4
+    κ = 1e-4
+    closure = ScalarBiharmonicDiffusivity(; ν, κ)
+    #closure = ScalarDiffusivity(; ν, κ)
+    println("ScalarBiharmonicDiffusivity")
+#elseif experiment == "test1_window"
+    # Do something else
+#    println("Running test1_window")
+else
+    closure = CATKEVerticalDiffusivity()
+    println("CATKEVerticalDiffusivity")
+end
 
 
 
-
-
-ν = 1e-4
-κ = 1e-4
-#closure = ScalarDiffusivity(; ν, κ)
-#closure = ScalarBiharmonicDiffusivity(; ν, κ)
-
-
-closure = CATKEVerticalDiffusivity()
 
 model = HydrostaticFreeSurfaceModel(; grid, buoyancy,
                             momentum_advection = WENO(),
