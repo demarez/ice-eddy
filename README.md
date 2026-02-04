@@ -7,7 +7,7 @@ The github contains the directories to copy on the home directory
 
 ## on the home dir, 
 
-3 folders: INIT, RUN, DIAGS.
+put there the 3 folders: INIT, RUN, DIAGS.
 
 ### in the INIT folder, 
 
