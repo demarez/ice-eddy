@@ -81,8 +81,8 @@ println("**************************")
 println("GO")
 
 
-rewrite = ARGS[2] #true #it has to be true the first time we run it !!!!
-pickup = ARGS[3] #it has to be false if we want to re-write and re-start from beggining
+rewrite = true#ARGS[2] #true #it has to be true the first time we run it !!!!
+pickup = true#ARGS[3] #it has to be false if we want to re-write and re-start from beggining
 
 ##### ##### ##### ##### ##### ##### ##### 
 ##### Vertical spacing of Z ##### ##### 
