@@ -1,0 +1,22 @@
+#!/bin/csh
+
+#PBS -q gpuq
+#PBS -l walltime=24:00:00
+#PBS -N oceananigans
+
+source /usr/share/Modules/init/csh
+
+cd $PBS_O_WORKDIR
+date
+rm *.pbs.*
+rm *.o*
+
+module list
+module load cuda/12.1u1
+
+conda activate julia_env
+
+setenv JULIA_CUDA_MEMORY_POOL none
+julia --project run.jl test4_HR true true
+
+date
