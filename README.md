@@ -25,6 +25,7 @@ launch the julia simulation
 
 --> it will run the simulation on GPU, with nothing more needed because everything is written in the *parameters.txt* file
 --> all will be stored on the datawork dir ....../RUN/ in the correct folder
+--> you can follow the simulation step in *run.log* file
 
 note that there is a readme with some tricks, update it with new infos
 
