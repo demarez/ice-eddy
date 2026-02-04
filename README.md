@@ -19,9 +19,9 @@ create initial conditions using the *Initiate_vortex.ipynb* notebook: Choose par
 
 launch the julia simulation 
 
-- adjust `path_root` in *run.jl*, and other parameterizations if needed : /!\ the drag and the closure scheme are changed in this file, put a if condition with the name of the experiment to save the choice !! and be able to re-run it quickly
+- adjust path_root in *run.jl*, and other parameterizations if needed : /!\ the drag and the closure scheme are changed in this file, put a if condition with the name of the experiment to save the choice !! and be able to re-run it quickly
 - adjust name of simulation in *submit2GPU.pbs*
-- $qsub submit2GPU.pbs
+- `qsub submit2GPU.pbs`
 
 --> it will run the simulation on GPU, with nothing more needed because everything is written in the *parameters.txt* file
 --> all will be stored on the datawork dir ....../RUN/ in the correct folder
