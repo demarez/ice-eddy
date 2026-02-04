@@ -1,7 +1,7 @@
 # ice-eddy
 Ice-Eddy interaction project in collaboration with Josue
 
-The github comprises the directories to put on the home directory
+The github contains the directories to copy on the home directory
 
 # Architecture of the project
 
