@@ -37,7 +37,7 @@ function read_parameters_from_txt(path_read::String)
 end
 
 experiment = ARGS[1]
-run_time = 360days
+run_time = 181days
 save_fields_interval = 24hour
 path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V0/"
 

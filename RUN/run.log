@@ -1,5 +1,5 @@
 stretching 40.0
-type_eddy 1.0
+type_eddy -1.0
 dy 500.0
 H_eddy 200.0
 V0_eddy 0.5
@@ -13,4 +13,3 @@ power_shape 20.0
 refinement 4.0
 Ly 200000.0
 ngrid_x 400.0
-i: 0000, t: 0 seconds, Δt: 1.100 seconds, umax = (5.0e-01, 5.0e-01, 1.0e-03) ms⁻¹, wall time: 0 seconds
