@@ -39,10 +39,7 @@ end
 experiment = ARGS[1]
 run_time = 360days
 save_fields_interval = 24hour
-path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V2/"
-
-
-
+path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V0/"
 
 ###define paths
 input_folder = path_root*"init_cond/"*experiment*"/" 
