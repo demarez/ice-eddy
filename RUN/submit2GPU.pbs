@@ -17,6 +17,6 @@ module load cuda/12.1u1
 conda activate julia_env
 
 setenv JULIA_CUDA_MEMORY_POOL none
-julia --project run.jl AC-0
+julia --project run.jl AC-0-noise10percent
 
 date
