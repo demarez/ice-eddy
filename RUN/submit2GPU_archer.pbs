@@ -18,6 +18,6 @@ cd $SLURM_SUBMIT_DIR
 
 date
 
-julia --project run.jl AC-0
+julia --project run.jl C-0
 
 date
