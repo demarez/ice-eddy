@@ -1,0 +1,89 @@
+Warning: no access to tty (Bad file descriptor).
+Thus no job control in this shell.
+Wed Feb 11 17:00:25 CET 2026
+rm: No match.
+Currently Loaded Modulefiles:
+  1) ncview/2.1.7__gcc-6.3.0
+┌ Warning: CUDA runtime library `libcublasLt.so.12` was loaded from a system path, `/appli/cuda/12.1u1/lib64/libcublasLt.so.12`.
+│ 
+│ This may cause errors. Ensure that you have not set the LD_LIBRARY_PATH
+│ environment variable, or that it does not contain paths to CUDA libraries.
+│ 
+│ In any other case, please file an issue.
+└ @ CUDA ~/.julia/packages/CUDA/Tl08O/src/initialization.jl:219
+┌ Warning: CUDA runtime library `libnvJitLink.so.12` was loaded from a system path, `/appli/cuda/12.1u1/lib64/libnvJitLink.so.12`.
+│ 
+│ This may cause errors. Ensure that you have not set the LD_LIBRARY_PATH
+│ environment variable, or that it does not contain paths to CUDA libraries.
+│ 
+│ In any other case, please file an issue.
+└ @ CUDA ~/.julia/packages/CUDA/Tl08O/src/initialization.jl:219
+┌ Warning: CUDA runtime library `libcusparse.so.12` was loaded from a system path, `/appli/cuda/12.1u1/lib64/libcusparse.so.12`.
+│ 
+│ This may cause errors. Ensure that you have not set the LD_LIBRARY_PATH
+│ environment variable, or that it does not contain paths to CUDA libraries.
+│ 
+│ In any other case, please file an issue.
+└ @ CUDA ~/.julia/packages/CUDA/Tl08O/src/initialization.jl:219
+┌ Warning: pickup=true but no checkpoints were found. Simulation will run without picking up.
+└ @ Oceananigans.OutputWriters ~/.julia/packages/Oceananigans/O717S/src/OutputWriters/checkpointer.jl:138
+[ Info: Initializing simulation...
+[ Info: i: 0000, t: 0 seconds, Δt: 1.100 seconds, umax = (7.3e-01, 7.3e-01, 1.2e-02) ms⁻¹, wall time: 0 seconds
+[ Info: Checkpointing to file /home2/scratch/cdemarez/ICE-EDDY-wJ/V2/RUN/C-5-TSbackground6-LR/model_checkpoint_iteration0.jld2...
+[ Info: Checkpointing done: time=5.654 seconds, size=49.9 MiB
+[ Info:     ... simulation initialization complete (27.162 seconds)
+[ Info: Executing initial time step...
+[ Info:     ... initial time step complete (55.945 seconds).
+[ Info: i: 1000, t: 6.245 hours, Δt: 30 seconds, umax = (7.4e-01, 7.4e-01, 4.2e-03) ms⁻¹, wall time: 1.656 minutes
+[ Info: i: 2000, t: 14.578 hours, Δt: 30 seconds, umax = (7.7e-01, 6.8e-01, 1.1e-03) ms⁻¹, wall time: 1.797 minutes
+[ Info: i: 3000, t: 22.911 hours, Δt: 30 seconds, umax = (7.4e-01, 7.9e-01, 7.4e-04) ms⁻¹, wall time: 1.939 minutes
+[ Info: i: 4000, t: 1.302 days, Δt: 30 seconds, umax = (7.2e-01, 7.2e-01, 1.5e-03) ms⁻¹, wall time: 2.081 minutes
+[ Info: i: 5000, t: 1.649 days, Δt: 30 seconds, umax = (7.1e-01, 7.4e-01, 1.7e-03) ms⁻¹, wall time: 2.223 minutes
+[ Info: i: 6000, t: 1.996 days, Δt: 30 seconds, umax = (7.8e-01, 6.8e-01, 1.4e-03) ms⁻¹, wall time: 2.364 minutes
+[ Info: i: 7000, t: 2.343 days, Δt: 30 seconds, umax = (7.1e-01, 7.4e-01, 1.9e-03) ms⁻¹, wall time: 2.506 minutes
+[ Info: i: 8000, t: 2.691 days, Δt: 30 seconds, umax = (7.3e-01, 7.4e-01, 3.0e-03) ms⁻¹, wall time: 2.647 minutes
+[ Info: i: 9000, t: 3.038 days, Δt: 30 seconds, umax = (7.3e-01, 7.2e-01, 3.0e-03) ms⁻¹, wall time: 2.789 minutes
+[ Info: i: 10000, t: 3.385 days, Δt: 30 seconds, umax = (7.0e-01, 7.3e-01, 2.4e-03) ms⁻¹, wall time: 2.929 minutes
+[ Info: i: 11000, t: 3.732 days, Δt: 30 seconds, umax = (7.1e-01, 7.2e-01, 1.8e-03) ms⁻¹, wall time: 3.070 minutes
+[ Info: i: 12000, t: 4.080 days, Δt: 30 seconds, umax = (6.9e-01, 7.1e-01, 2.5e-03) ms⁻¹, wall time: 3.211 minutes
+[ Info: i: 13000, t: 4.427 days, Δt: 30 seconds, umax = (7.1e-01, 6.6e-01, 1.6e-03) ms⁻¹, wall time: 3.351 minutes
+[ Info: i: 14000, t: 4.774 days, Δt: 30 seconds, umax = (7.3e-01, 7.0e-01, 1.3e-03) ms⁻¹, wall time: 3.491 minutes
+[ Info: i: 15000, t: 5.121 days, Δt: 30 seconds, umax = (6.7e-01, 7.4e-01, 1.1e-03) ms⁻¹, wall time: 3.632 minutes
+[ Info: i: 16000, t: 5.468 days, Δt: 30 seconds, umax = (6.4e-01, 6.9e-01, 1.3e-03) ms⁻¹, wall time: 3.772 minutes
+[ Info: i: 17000, t: 5.816 days, Δt: 30 seconds, umax = (6.6e-01, 6.4e-01, 1.3e-03) ms⁻¹, wall time: 3.912 minutes
+[ Info: i: 18000, t: 6.163 days, Δt: 30 seconds, umax = (7.1e-01, 6.5e-01, 1.3e-03) ms⁻¹, wall time: 4.053 minutes
+[ Info: i: 19000, t: 6.510 days, Δt: 30 seconds, umax = (7.1e-01, 7.0e-01, 1.3e-03) ms⁻¹, wall time: 4.199 minutes
+[ Info: i: 20000, t: 6.857 days, Δt: 30 seconds, umax = (6.6e-01, 7.0e-01, 9.6e-04) ms⁻¹, wall time: 4.339 minutes
+[ Info: i: 21000, t: 7.205 days, Δt: 30 seconds, umax = (6.6e-01, 6.6e-01, 6.3e-04) ms⁻¹, wall time: 4.479 minutes
+[ Info: i: 22000, t: 7.552 days, Δt: 30 seconds, umax = (6.8e-01, 6.7e-01, 5.6e-04) ms⁻¹, wall time: 4.620 minutes
+[ Info: i: 23000, t: 7.899 days, Δt: 30 seconds, umax = (6.8e-01, 6.6e-01, 5.4e-04) ms⁻¹, wall time: 4.759 minutes
+[ Info: i: 24000, t: 8.246 days, Δt: 30 seconds, umax = (6.8e-01, 6.9e-01, 6.1e-04) ms⁻¹, wall time: 4.900 minutes
+[ Info: i: 25000, t: 8.593 days, Δt: 30 seconds, umax = (6.7e-01, 6.9e-01, 5.5e-04) ms⁻¹, wall time: 5.040 minutes
+[ Info: i: 26000, t: 8.941 days, Δt: 30 seconds, umax = (6.7e-01, 6.7e-01, 5.6e-04) ms⁻¹, wall time: 5.180 minutes
+[ Info: i: 27000, t: 9.288 days, Δt: 30 seconds, umax = (6.7e-01, 6.7e-01, 6.4e-04) ms⁻¹, wall time: 5.321 minutes
+[ Info: i: 28000, t: 9.635 days, Δt: 30 seconds, umax = (6.8e-01, 6.6e-01, 6.2e-04) ms⁻¹, wall time: 5.460 minutes
+[ Info: i: 29000, t: 9.982 days, Δt: 30 seconds, umax = (6.8e-01, 6.9e-01, 5.8e-04) ms⁻¹, wall time: 5.600 minutes
+[ Info: i: 30000, t: 10.330 days, Δt: 30 seconds, umax = (6.7e-01, 6.8e-01, 5.7e-04) ms⁻¹, wall time: 5.741 minutes
+[ Info: i: 31000, t: 10.677 days, Δt: 30 seconds, umax = (6.7e-01, 6.7e-01, 5.1e-04) ms⁻¹, wall time: 5.881 minutes
+[ Info: i: 32000, t: 11.024 days, Δt: 30 seconds, umax = (6.7e-01, 6.7e-01, 5.7e-04) ms⁻¹, wall time: 6.021 minutes
+[ Info: i: 33000, t: 11.371 days, Δt: 30 seconds, umax = (6.8e-01, 6.7e-01, 5.5e-04) ms⁻¹, wall time: 6.161 minutes
+[ Info: i: 34000, t: 11.718 days, Δt: 30 seconds, umax = (6.7e-01, 6.8e-01, 5.7e-04) ms⁻¹, wall time: 6.301 minutes
+[ Info: i: 35000, t: 12.066 days, Δt: 30 seconds, umax = (6.8e-01, 6.7e-01, 4.8e-04) ms⁻¹, wall time: 6.442 minutes
+[ Info: i: 36000, t: 12.413 days, Δt: 30 seconds, umax = (6.7e-01, 6.8e-01, 4.4e-04) ms⁻¹, wall time: 6.581 minutes
+[ Info: i: 37000, t: 12.760 days, Δt: 30 seconds, umax = (6.8e-01, 6.7e-01, 5.7e-04) ms⁻¹, wall time: 6.721 minutes
+[ Info: i: 38000, t: 13.107 days, Δt: 30 seconds, umax = (6.8e-01, 6.8e-01, 4.6e-04) ms⁻¹, wall time: 6.862 minutes
+[ Info: i: 39000, t: 13.455 days, Δt: 30 seconds, umax = (6.7e-01, 6.8e-01, 4.6e-04) ms⁻¹, wall time: 7.002 minutes
+[ Info: i: 40000, t: 13.802 days, Δt: 30 seconds, umax = (6.8e-01, 6.7e-01, 4.7e-04) ms⁻¹, wall time: 7.142 minutes
+[ Info: i: 41000, t: 14.149 days, Δt: 30 seconds, umax = (6.7e-01, 6.8e-01, 4.9e-04) ms⁻¹, wall time: 7.282 minutes
+[ Info: i: 42000, t: 14.496 days, Δt: 30 seconds, umax = (6.8e-01, 6.8e-01, 5.4e-04) ms⁻¹, wall time: 7.422 minutes
+[ Info: i: 43000, t: 14.843 days, Δt: 30 seconds, umax = (6.7e-01, 6.8e-01, 5.1e-04) ms⁻¹, wall time: 7.562 minutes
+[ Info: Simulation is stopping after running for 7.624 minutes.
+[ Info: Simulation time 15 days equals or exceeds stop time 15 days.
+Dict("stretching" => 40.0, "type_eddy" => 1.0, "dy" => 2000.0, "H_eddy" => 500.0, "V0_eddy" => 0.75, "ngrid_y" => 100.0, "Lx" => 200000.0, "Lz" => 4000.0, "dx" => 2000.0, "ngrid_z" => 30.0, "R_eddy" => 10000.0, "power_shape" => 20.0, "refinement" => 4.0, "Ly" => 200000.0, "ngrid_x" => 100.0)
+**************************
+GO
+No drag
+CATKEVerticalDiffusivity
+create output fields
+RUN!
+Wed Feb 11 17:11:11 CET 2026

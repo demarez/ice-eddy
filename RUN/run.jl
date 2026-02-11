@@ -37,10 +37,10 @@ function read_parameters_from_txt(path_read::String)
 end
 
 experiment = ARGS[1]
-run_time = 181days
+run_time = 15days#181days
 save_fields_interval = 24hour
-path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V2/"
-
+#path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V2/"
+path_root="/home2/scratch/cdemarez/ICE-EDDY-wJ/V2/"
 
 
 
