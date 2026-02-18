@@ -16,3 +16,4 @@ ngrid_x 400.0
 i: 0000, t: 0 seconds, Δt: 1.100 seconds, umax = (5.2e-01, 5.2e-01, 1.5e-02) ms⁻¹, wall time: 0 seconds
 i: 1000, t: 6.245 hours, Δt: 30 seconds, umax = (5.0e-01, 5.0e-01, 7.0e-03) ms⁻¹, wall time: 3.837 minutes
 i: 2000, t: 14.578 hours, Δt: 30 seconds, umax = (4.9e-01, 4.9e-01, 5.7e-03) ms⁻¹, wall time: 6.177 minutes
+i: 3000, t: 22.911 hours, Δt: 30 seconds, umax = (4.9e-01, 4.9e-01, 4.4e-03) ms⁻¹, wall time: 8.433 minutes
