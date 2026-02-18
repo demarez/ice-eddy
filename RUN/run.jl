@@ -67,7 +67,7 @@ stretching = Int(params["stretching"])#40
 type_eddy=Int(params["type_eddy"])
 cyclonic = type_eddy > 0
 
-open("run.log", "w") do f
+open("run_"*experiment*".log", "w") do f
     # Write the parameters to the log file
     for (key, value) in params
         write(f, "$key $value\n")
@@ -175,7 +175,7 @@ f = 0.255
 delta = 1/80
 threshold = 0.001
 edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=threshold )
-damping = Relaxation(rate = 1/100, mask=edge_mask)
+damping = Relaxation(rate = 1/1000, mask=edge_mask)
 coriolis = FPlane(f=0.000143) #value at lat=80°N
 
 
@@ -247,7 +247,7 @@ function progress(simulation)
     @info msg
     
     # Write to run.log file (append mode)
-    open("run.log", "a") do f
+    open("run_"*experiment*".log", "a") do f
         write(f, msg)
     end
 
