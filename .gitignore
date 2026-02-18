@@ -9,4 +9,4 @@ venv/
 *.swp
 *.swo
 
-animation
+DIAGS/figures/animation
