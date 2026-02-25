@@ -125,7 +125,7 @@ no_slip_field_bcs = FieldBoundaryConditions(no_slip_bc);
 
 cᴰ = 0 
 
-if experiment == "idksomewithdrag"
+if experiment == "AC-6-noise10percent-LR" || experiment == "AC-2-noise10percent" || experiment == "AC-3-noise10percent" || experiment == "AC-6-noise10percent" || experiment == "AC-7-noise10percent" || experiment == "AC-7-LR" || experiment == "C-7-LR"
     
     z₀ = 0.01 # m (roughness length) ###the one we vary
     κ = 0.4  # von Karman constant
@@ -183,7 +183,7 @@ coriolis = FPlane(f=0.000143) #value at lat=80°N
 
 
 
-if experiment == "idksomewithotherclosure"
+if experiment == "someexpe"
     ν = 1e-4
     κ = 1e-4
     closure = ScalarBiharmonicDiffusivity(; ν, κ)
