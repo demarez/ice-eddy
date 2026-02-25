@@ -180,7 +180,7 @@ coriolis = FPlane(f=0.000143) #value at lat=80°N
 
 
 
-if experiment == "someexpe"
+if occursin("BiH",experiment)
     ν = 1e-4
     κ = 1e-4
     closure = ScalarBiharmonicDiffusivity(; ν, κ)
