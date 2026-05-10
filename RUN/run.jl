@@ -182,19 +182,13 @@ coriolis = FPlane(f=0.000143) #value at lat=80°N
 
 
 
-if experiment == "someexpe"
-    ν = 1e-4
-    κ = 1e-4
-    closure = ScalarBiharmonicDiffusivity(; ν, κ)
-    #closure = ScalarDiffusivity(; ν, κ)
-    println("ScalarBiharmonicDiffusivity")
-#elseif experiment == "test1_window"
-    # Do something else
-#    println("Running test1_window")
-else
-    closure = CATKEVerticalDiffusivity()
-    println("CATKEVerticalDiffusivity")
-end
+ν = 1e-4
+κ = 1e-4
+closure = ScalarBiharmonicDiffusivity(; ν, κ)
+println("ScalarBiharmonicDiffusivity")
+
+#closure = CATKEVerticalDiffusivity()
+#println("CATKEVerticalDiffusivity")
 
 
 
