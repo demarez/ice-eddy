@@ -38,7 +38,7 @@ function read_parameters_from_txt(path_read::String)
 end
 
 experiment = ARGS[1]
-run_time = 181days
+run_time = 91days#181days
 save_fields_interval = 24hour
 path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V0/"
 
@@ -54,9 +54,9 @@ println(params)
 
 ##### Dimensions of model: read in the parameters file from the init notebook
 
-Lx = Int(params["Lx"]/1000)kilometers#200kilometers 
-Ly = Int(params["Ly"]/1000)kilometers#200kilometers 
-Lz = Int(params["Lz"]/1000)kilometers#2kilometers    
+Lx = Float32(params["Lx"]/1000)kilometers#200kilometers 
+Ly = Float32(params["Ly"]/1000)kilometers#200kilometers 
+Lz = Float32(params["Lz"]/1000)kilometers#2kilometers  
 
 Nx = Int(params["ngrid_x"])#200
 Ny = Int(params["ngrid_y"])#200
@@ -178,21 +178,26 @@ coriolis = FPlane(f=0.000143) #value at lat=80°N
 
 
 
-if occursin("BiH",experiment)
-    ν = 1e-4
-    κ = 1e-4
-    closure = ScalarBiharmonicDiffusivity(; ν, κ)
-    #closure = ScalarDiffusivity(; ν, κ)
-    println("ScalarBiharmonicDiffusivity")
-#elseif experiment == "test1_window"
-    # Do something else
-#    println("Running test1_window")
-else
-    closure = CATKEVerticalDiffusivity()
-    println("CATKEVerticalDiffusivity")
-end
+# The commented code below allows for more flexible selection of the turbulence closure.
 
+# if occursin("BiH",experiment)
+#     ν = 1e-4
+#     κ = 1e-4
+#     closure = ScalarBiharmonicDiffusivity(; ν, κ)
+#     #closure = ScalarDiffusivity(; ν, κ)
+#     println("ScalarBiharmonicDiffusivity")
+# #elseif experiment == "test1_window"
+#     # Do something else
+# #    println("Running test1_window")
+# else
+#     closure = CATKEVerticalDiffusivity()
+#     println("CATKEVerticalDiffusivity")
+# end
 
+ν = 1e-4
+κ = 1e-4
+closure = ScalarBiharmonicDiffusivity(; ν, κ)
+println("ScalarBiharmonicDiffusivity")
 
 
 model = HydrostaticFreeSurfaceModel( grid;  buoyancy,
