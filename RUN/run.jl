@@ -4,6 +4,7 @@ using CairoMakie
 using Printf
 using CUDA
 using Oceananigans.TurbulenceClosures: CATKEVerticalDiffusivity
+using Oceananigans.Models: buoyancy_field
 using NCDatasets
 using SeawaterPolynomials.TEOS10: TEOS10EquationOfState
 using Base.Filesystem
@@ -108,8 +109,10 @@ grid = RectilinearGrid(GPU(),
                        z = z_faces,
                        topology = (Bounded, Bounded, Bounded))
 
-teos10 = TEOS10EquationOfState()
-buoyancy = SeawaterBuoyancy(equation_of_state=teos10)
+buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8e-4))
+
+# teos10 = TEOS10EquationOfState()
+# buoyancy = SeawaterBuoyancy(equation_of_state=teos10)
 
 #lineq_state = LinearEquationOfState(thermal_expansion=0, haline_contraction=8e-4)
 #lineq_state = LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8.0e-4)
@@ -122,8 +125,7 @@ no_slip_field_bcs = FieldBoundaryConditions(no_slip_bc);
 
 cᴰ = 0 
 
-if experiment == "idksomewithdrag"
-    
+if occursin("drag",experiment) 
     z₀ = 0.01 # m (roughness length) ###the one we vary
     κ = 0.4  # von Karman constant
     z₁ = CUDA.@allowscalar -last(znodes(grid, Center())) # Closest grid center to the bottom
@@ -137,10 +139,6 @@ else
     cᴰ = 0 
     println("No drag")
 end
-
-
-
-
 
 Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
@@ -180,7 +178,7 @@ coriolis = FPlane(f=0.000143) #value at lat=80°N
 
 
 
-if experiment == "idksomewithotherclosure"
+if occursin("BiH",experiment)
     ν = 1e-4
     κ = 1e-4
     closure = ScalarBiharmonicDiffusivity(; ν, κ)
@@ -197,15 +195,14 @@ end
 
 
 
-model = HydrostaticFreeSurfaceModel(; grid, buoyancy,
+model = HydrostaticFreeSurfaceModel( grid;  buoyancy,
                             momentum_advection = WENO(),
                             tracer_advection = WENO(),
-                            tracers = (:T, :S, :e),
+                            tracers = (:T, :S),
                             coriolis = coriolis,
                             closure = closure,
                             boundary_conditions=(u=u_bcs, v=v_bcs),
-                            forcing=(u=damping, v=damping, w=damping)
-)
+                            forcing=(u=damping, v=damping))
 
 ds = Dataset(init_file);
 
@@ -230,7 +227,7 @@ max_dt = 30second # using automatic submit, this should be in seconds
 
 simulation = Simulation(model, Δt=1.0, stop_time=run_time)
 
-wizard = TimeStepWizard(cfl=1.0, max_change=1.1, max_Δt=max_dt)
+wizard = TimeStepWizard(cfl=0.5, max_change=1.1, max_Δt=max_dt)
 simulation.callbacks[:wizard] = Callback(wizard, IterationInterval(10))
 
 function progress(simulation)
@@ -259,7 +256,7 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(1000))
 u, v, w = model.velocities
 
 T,S = model.tracers
-b = BuoyancyField(model)
+b = buoyancy_field(model)
 
 ζ = ∂x(v) - ∂y(u)
 
@@ -272,7 +269,7 @@ vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 println("create output fields")
 
 simulation.output_writers[:tracer_field_writer] =
-    NetCDFOutputWriter(model, tracer_fields; 
+             NetCDFWriter(model, tracer_fields; 
                        filename=output_folder*"tracer_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
@@ -280,7 +277,7 @@ simulation.output_writers[:tracer_field_writer] =
                        )
 
 simulation.output_writers[:vel_field_writer] =
-    NetCDFOutputWriter(model, vel_fields; 
+             NetCDFWriter(model, vel_fields; 
                        filename=output_folder*"vel_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
