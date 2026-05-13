@@ -10,3 +10,4 @@ venv/
 *.swo
 
 DIAGS/figures/animation
+RUN/run*

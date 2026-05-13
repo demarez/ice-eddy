@@ -18,6 +18,6 @@ cd $SLURM_SUBMIT_DIR
 
 date
 
-julia --project run.jl C-5-noise10percent_BiH
+julia --project run.jl C-10-noise10percent_only_salt_BiH
 
 date
