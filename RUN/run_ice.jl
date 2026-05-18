@@ -48,7 +48,7 @@ function read_parameters_from_txt(path_read::String)
 end
 
 experiment = ARGS[1]
-run_time = 91days#181days
+run_time = 45days#91days#181days
 save_fields_interval = 24hour
 path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V4/"
 
@@ -177,7 +177,7 @@ println("ScalarBiharmonicDiffusivity")
 
 output_prefix = "OceanIce_periodic"
 
-Δt=1.0
+Δt=5.0
 max_dt = 30second # using automatic submit, this should be in seconds
 run_time = 91days
 
@@ -280,8 +280,8 @@ ocean_model = HydrostaticFreeSurfaceModel( grid;  buoyancy,
 
 ocean = Simulation(ocean_model; Δt, verbose = false)
 
-wizard = TimeStepWizard(cfl=0.5, max_change=1.1, max_Δt=max_dt)
-ocean.callbacks[:wizard] = Callback(wizard, IterationInterval(10))
+#wizard = TimeStepWizard(cfl=0.5, max_change=1.1, max_Δt=max_dt)
+#ocean.callbacks[:wizard] = Callback(wizard, IterationInterval(10))
 
 set!(ocean.model, u=uᵢ, v=vᵢ, T=Tᵢ, S=Sᵢ, η=ηᵢ)
 
@@ -358,6 +358,29 @@ simulation.output_writers[:vel_field_writer] =
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
 #                       file_splitting = TimeInterval(30days),
+                       )
+
+sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
+                     ℵ = sea_ice.model.ice_concentration)
+
+simulation.output_writers[:ice_fields_writer] = 
+             NetCDFWriter(sea_ice.model, sea_ice_outputs;
+                       filename=output_folder*"vel_fields.nc",
+                       schedule = TimeInterval(save_fields_interval),
+                       overwrite_existing = rewrite,
+                       )
+
+# Ocean net surface fluxes (momentum + tracers)
+ocean_flux_outputs = (; τx = coupled_model.interfaces.net_fluxes.ocean.u,
+                        τy = coupled_model.interfaces.net_fluxes.ocean.v,
+                        JT = coupled_model.interfaces.net_fluxes.ocean.T,
+                        JS = coupled_model.interfaces.net_fluxes.ocean.S)
+
+simulation.output_writers[:fluxes] = 
+             NetCDFWriter(ocean.model, ocean_flux_outputs;
+                       filename = output_folder*"ocean_fluxes.nc",
+                       schedule = TimeInterval(save_fields_interval),
+                       overwrite_existing = rewrite,
                        )
 
 simulation.output_writers[:checkpointer] = 
