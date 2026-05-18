@@ -104,7 +104,7 @@ println("**************************")
 println("GO")
 
 rewrite = true#ARGS[2] #true #it has to be true the first time we run it !!!!
-pickup = true#ARGS[3] #it has to be false if we want to re-write and re-start from beggining
+pickup = false#ARGS[3] #it has to be false if we want to re-write and re-start from beggining
 
 # =====================
 # Grid (shared)
@@ -331,20 +331,31 @@ function progress(simulation)
 end
 
 simulation.callbacks[:progress] = Callback(progress, IterationInterval(1000))
+
 u, v, w = ocean.model.velocities
 
 T,S = ocean.model.tracers
-b = buoyancy_field(ocean.model)
+#b = buoyancy_field(ocean.model)
 
 ζ = ∂x(v) - ∂y(u)
 
-tracer_fields = Dict("T" => T, "S" => S, "B" => b);
+tracer_fields = Dict("T" => T, "S" => S); #, "B" => b);
 
 vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 
 println("create output fields")
 
-simulation.output_writers[:tracer_field_writer] =
+sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
+                     ℵ = sea_ice.model.ice_concentration)
+
+sea_ice.output_writers[:ice_field_writer] = 
+             NetCDFWriter(sea_ice.model, sea_ice_outputs;
+                       filename=output_folder*"ice_fields",
+                       schedule = TimeInterval(save_fields_interval),
+                       overwrite_existing = rewrite,
+                       )
+
+ocean.output_writers[:tracer_field_writer] =
              NetCDFWriter(ocean.model, tracer_fields; 
                        filename=output_folder*"tracer_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
@@ -352,22 +363,12 @@ simulation.output_writers[:tracer_field_writer] =
 #                       file_splitting = TimeInterval(30days),
                        )
 
-simulation.output_writers[:vel_field_writer] =
+ocean.output_writers[:vel_field_writer] =
              NetCDFWriter(ocean.model, vel_fields; 
                        filename=output_folder*"vel_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
 #                       file_splitting = TimeInterval(30days),
-                       )
-
-sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
-                     ℵ = sea_ice.model.ice_concentration)
-
-simulation.output_writers[:ice_fields_writer] = 
-             NetCDFWriter(sea_ice.model, sea_ice_outputs;
-                       filename=output_folder*"vel_fields.nc",
-                       schedule = TimeInterval(save_fields_interval),
-                       overwrite_existing = rewrite,
                        )
 
 # Ocean net surface fluxes (momentum + tracers)
@@ -376,7 +377,7 @@ ocean_flux_outputs = (; τx = coupled_model.interfaces.net_fluxes.ocean.u,
                         JT = coupled_model.interfaces.net_fluxes.ocean.T,
                         JS = coupled_model.interfaces.net_fluxes.ocean.S)
 
-simulation.output_writers[:fluxes] = 
+ocean.output_writers[:fluxes] = 
              NetCDFWriter(ocean.model, ocean_flux_outputs;
                        filename = output_folder*"ocean_fluxes.nc",
                        schedule = TimeInterval(save_fields_interval),
@@ -384,7 +385,7 @@ simulation.output_writers[:fluxes] =
                        )
 
 simulation.output_writers[:checkpointer] = 
-    Checkpointer(ocean.model;
+    Checkpointer(simulation.model;
 		 dir = output_folder,
                  schedule=TimeInterval(30days), 
                  prefix="model_checkpoint",
@@ -393,4 +394,4 @@ simulation.output_writers[:checkpointer] =
                  )
 
 println("RUN!")
-run!(simulation)#, pickup=pickup)
+run!(simulation, pickup=pickup)

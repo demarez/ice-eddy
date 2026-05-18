@@ -19,3 +19,26 @@ qsub -I -q gpuq -l walltime=00:30:00
 
 with mpi 
 qsub -I -q mpi_1 -l select=1:ncpus=28:mpiprocs=28:mem=120g -l walltime=12:00:00
+
+
+I needed to change the file /data/hpcdata/users/josnez/julia/packages/Oceananigans/j2tCL/ext/OceananigansNCDatasetsExt/netcdf_writer.jl by adding the line:
+
+default_output_attributes(model) = Dict{String, Any}()
+
+and comment the definition:
+
+#function default_output_attributes(model)
+#    velocity_attrs = default_velocity_attributes(model.grid)
+#    buoyancy = model isa ShallowWaterModel ? nothing : model.buoyancy
+#    tracer_attrs = default_tracer_attributes(buoyancy)
+#    return merge(velocity_attrs, tracer_attrs)
+#end
+
+This is fixed in the newer version of Oceananigans, but there are some incompatibilities to run this set up in newer versions of ClimaSeaIce and NumericalEarth.
+
+Make sure to use the versions:
+Status `/data/hpcdata/users/josnez/Oceananigans.jl/ice-eddy/RUN/Project.toml`
+⌃ [6ba0ff68] ClimaSeaIce v0.4.4 (<v0.5.0)
+⌃ [904d977b] NumericalEarth v0.2.0 (<v0.4.1)
+⌅ [9e8cae18] Oceananigans v0.105.5 (<v0.107.7): ClimaSeaIce, NumericalEarth
+
