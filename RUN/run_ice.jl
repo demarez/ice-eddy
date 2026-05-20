@@ -183,11 +183,11 @@ run_time = 91days
 
 # --- Atmosphere (fresh instance) ---
 # Atmospheric state (polar winter)
-const Tₐ  = 273.15 - 20  # -20°C in Kelvin
+const Tₐ  = 273.15 - 12  # -12°C in Kelvin
 const u₁₀ = 0            # No winds
-const qₐ  = 0.001        # specific humidity (dry cold air)
-const Qsw = 0.0          # no shortwave (polar winter)
-const Qlw = 180.0        # downwelling longwave (W/m²)
+const qₐ  = 0.0        # specific humidity (dry cold air)
+const Qsw = 180.0          # no shortwave (polar winter)
+const Qlw = 230.0        # downwelling longwave (W/m²)
 
 function build_atmosphere(arch)
     atmosphere_grid  = RectilinearGrid(arch; size = (1, 1),
@@ -292,6 +292,8 @@ sea_ice = sea_ice_simulation(grid, ocean;
                             minimum_buffer_upwind_order=1))#,
                             # dynamics = sea_ice_dyn)
                             
+#sea_ice = FreezingLimitedOceanTemperature()
+
 set!(sea_ice.model, h=h₀, ℵ=ℵ₀)
 
 println("Set up coupled model")
@@ -301,7 +303,11 @@ const ocean_heat_cap = 3991.86795711963
 
 # --- Coupled Model ---
 coupled_model = OceanSeaIceModel(ocean, sea_ice; 
-                                 atmosphere, radiation, 
+                                 #nothing,
+                                 #nothing,
+                                 #atmosphere, 
+                                 #radiation, 
+                                 atmosphere=nothing, radiation=nothing,
                                  ocean_reference_density=ocean_rho_ref, 
                                  ocean_heat_capacity=ocean_heat_cap)
 
@@ -345,15 +351,15 @@ vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 
 println("create output fields")
 
-sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
-                     ℵ = sea_ice.model.ice_concentration)
+#sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
+#                     ℵ = sea_ice.model.ice_concentration)
 
-sea_ice.output_writers[:ice_field_writer] = 
-             NetCDFWriter(sea_ice.model, sea_ice_outputs;
-                       filename=output_folder*"ice_fields",
-                       schedule = TimeInterval(save_fields_interval),
-                       overwrite_existing = rewrite,
-                       )
+#sea_ice.output_writers[:ice_field_writer] = 
+#             NetCDFWriter(sea_ice.model, sea_ice_outputs;
+#                       filename=output_folder*"ice_fields",
+#                       schedule = TimeInterval(save_fields_interval),
+#                       overwrite_existing = rewrite,
+#                       )
 
 ocean.output_writers[:tracer_field_writer] =
              NetCDFWriter(ocean.model, tracer_fields; 
