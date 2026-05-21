@@ -207,7 +207,12 @@ function build_atmosphere(arch)
     return atmosphere
 end
 
-atmosphere = build_atmosphere(Oceananigans.Architectures.architecture(grid))
+if occursin("noATM",experiment)
+    atmosphere=nothing
+else
+    atmosphere = build_atmosphere(Oceananigans.Architectures.architecture(grid))
+end
+
 # radiation  = Radiation(ocean_albedo=0.06, sea_ice_albedo=0.7)
 
 cᴰ = 0
@@ -313,6 +318,7 @@ println("Set up coupled model")
 #                                  #aatmosphere=nothing, radiation=nothing,
 #                                  ocean_reference_density=ocean_rho_ref, 
 #                                  ocean_heat_capacity=ocean_heat_cap)
+
 
 coupled_model = EarthSystemModel(nothing, atmosphere, nothing, sea_ice, ocean; 
                                 ocean_reference_density=ocean_rho_ref,

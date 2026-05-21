@@ -21,6 +21,7 @@ with mpi
 qsub -I -q mpi_1 -l select=1:ncpus=28:mpiprocs=28:mem=120g -l walltime=12:00:00
 
 
+This has been fixed in the latest versions of Oceananigans > 108.0
 I needed to change the file /data/hpcdata/users/josnez/julia/packages/Oceananigans/j2tCL/ext/OceananigansNCDatasetsExt/netcdf_writer.jl by adding the line:
 
 default_output_attributes(model) = Dict{String, Any}()
@@ -48,4 +49,6 @@ function sea_ice_dynamics(grid, ocean=nothing;
     FT = eltype(grid)
     sea_ice_ocean_drag_coefficient = convert(FT, sea_ice_ocean_drag_coefficient)
     ρₑ = convert(FT, ocean_reference_density)
+
+Include changes described in https://github.com/NumericalEarth/NumericalEarth.jl/pull/269 to allow for model without atmosphere and radiation
 
