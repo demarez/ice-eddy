@@ -8,11 +8,12 @@ using Oceananigans.Units
 using Oceananigans.Models: buoyancy_field
 
 using ClimaSeaIce
-using ClimaSeaIce: SeaIceModel, SlabSeaIceThermodynamics, PhaseTransitions, ConductiveFlux
+using ClimaSeaIce: SeaIceModel, PhaseTransitions, ConductiveFlux
 using ClimaSeaIce.SeaIceThermodynamics: IceWaterThermalEquilibrium, PrescribedTemperature
 
 using NumericalEarth.EarthSystemModels: ocean_surface_salinity
 using NumericalEarth.Oceans
+using NumericalEarth.SeaIces: sea_ice_dynamics
 
 using NCDatasets
 using Printf
@@ -104,7 +105,7 @@ println("**************************")
 println("GO")
 
 rewrite = true#ARGS[2] #true #it has to be true the first time we run it !!!!
-pickup = true#ARGS[3] #it has to be false if we want to re-write and re-start from beggining
+pickup = false#ARGS[3] #it has to be false if we want to re-write and re-start from beggining
 
 # =====================
 # Grid (shared)
@@ -136,8 +137,8 @@ damping = Relaxation(rate = 1/1000, mask=edge_mask)
 # =====================
 
 # Sea ice initial conditions
-const h₀ = 0.5   # initial ice thickness (m)
-const ℵ₀ = 0.9   # initial ice concentration
+const h₀ = 0   # initial ice thickness (m)
+const ℵ₀ = 0   # initial ice concentration
 
 # Ocean initial conditions
 
@@ -183,11 +184,11 @@ run_time = 91days
 
 # --- Atmosphere (fresh instance) ---
 # Atmospheric state (polar winter)
-const Tₐ  = 273.15 - 20  # -20°C in Kelvin
+const Tₐ  = 273.15 - 12  # -12°C in Kelvin
 const u₁₀ = 0            # No winds
-const qₐ  = 0.001        # specific humidity (dry cold air)
-const Qsw = 0.0          # no shortwave (polar winter)
-const Qlw = 180.0        # downwelling longwave (W/m²)
+const qₐ  = 0.0        # specific humidity (dry cold air)
+const Qsw = 180.0          # no shortwave (polar winter)
+const Qlw = 230.0        # downwelling longwave (W/m²)
 
 function build_atmosphere(arch)
     atmosphere_grid  = RectilinearGrid(arch; size = (1, 1),
@@ -206,8 +207,13 @@ function build_atmosphere(arch)
     return atmosphere
 end
 
-atmosphere = build_atmosphere(Oceananigans.Architectures.architecture(grid))
-radiation  = Radiation(ocean_albedo=0.06, sea_ice_albedo=0.7)
+if occursin("noATM",experiment)
+    atmosphere=nothing
+else
+    atmosphere = build_atmosphere(Oceananigans.Architectures.architecture(grid))
+end
+
+# radiation  = Radiation(ocean_albedo=0.06, sea_ice_albedo=0.7)
 
 cᴰ = 0
 
@@ -285,25 +291,38 @@ ocean = Simulation(ocean_model; Δt, verbose = false)
 
 set!(ocean.model, u=uᵢ, v=vᵢ, T=Tᵢ, S=Sᵢ, η=ηᵢ)
 
-# sea_ice_dyn = sea_ice_dynamics(grid, ocean; sea_ice_ocean_drag_coefficient = 3.24e-3)
+const ocean_rho_ref = 1030
+const ocean_heat_cap = 3991.86795711963
+
+sea_ice_dyn = sea_ice_dynamics(grid, ocean;        
+                            ocean_reference_density=ocean_rho_ref,
+                            sea_ice_ocean_drag_coefficient = 3.24e-3)
 
 sea_ice = sea_ice_simulation(grid, ocean; 
                             advection = WENO(order=7, 
-                            minimum_buffer_upwind_order=1))#,
-                            # dynamics = sea_ice_dyn)
+                            minimum_buffer_upwind_order=1),
+                            dynamics = sea_ice_dyn)
                             
+#sea_ice = FreezingLimitedOceanTemperature()
+
 set!(sea_ice.model, h=h₀, ℵ=ℵ₀)
 
 println("Set up coupled model")
 
-const ocean_rho_ref = 1030
-const ocean_heat_cap = 3991.86795711963
+
 
 # --- Coupled Model ---
-coupled_model = OceanSeaIceModel(ocean, sea_ice; 
-                                 atmosphere, radiation, 
-                                 ocean_reference_density=ocean_rho_ref, 
-                                 ocean_heat_capacity=ocean_heat_cap)
+# coupled_model = OceanSeaIceModel(ocean, sea_ice; 
+#                                  atmosphere, 
+#                                  radiation, 
+#                                  #aatmosphere=nothing, radiation=nothing,
+#                                  ocean_reference_density=ocean_rho_ref, 
+#                                  ocean_heat_capacity=ocean_heat_cap)
+
+
+coupled_model = EarthSystemModel(nothing, atmosphere, nothing, sea_ice, ocean; 
+                                ocean_reference_density=ocean_rho_ref,
+                                ocean_heat_capacity=ocean_heat_cap)
 
 #coupled_model = OceanSeaIceModel(ocean, sea_ice)
 
@@ -331,20 +350,31 @@ function progress(simulation)
 end
 
 simulation.callbacks[:progress] = Callback(progress, IterationInterval(1000))
+
 u, v, w = ocean.model.velocities
 
 T,S = ocean.model.tracers
-b = buoyancy_field(ocean.model)
+#b = buoyancy_field(ocean.model)
 
 ζ = ∂x(v) - ∂y(u)
 
-tracer_fields = Dict("T" => T, "S" => S, "B" => b);
+tracer_fields = Dict("T" => T, "S" => S); #, "B" => b);
 
 vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 
 println("create output fields")
 
-simulation.output_writers[:tracer_field_writer] =
+#sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
+#                     ℵ = sea_ice.model.ice_concentration)
+
+#sea_ice.output_writers[:ice_field_writer] = 
+#             NetCDFWriter(sea_ice.model, sea_ice_outputs;
+#                       filename=output_folder*"ice_fields",
+#                       schedule = TimeInterval(save_fields_interval),
+#                       overwrite_existing = rewrite,
+#                       )
+
+ocean.output_writers[:tracer_field_writer] =
              NetCDFWriter(ocean.model, tracer_fields; 
                        filename=output_folder*"tracer_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
@@ -352,22 +382,12 @@ simulation.output_writers[:tracer_field_writer] =
 #                       file_splitting = TimeInterval(30days),
                        )
 
-simulation.output_writers[:vel_field_writer] =
+ocean.output_writers[:vel_field_writer] =
              NetCDFWriter(ocean.model, vel_fields; 
                        filename=output_folder*"vel_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
 #                       file_splitting = TimeInterval(30days),
-                       )
-
-sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
-                     ℵ = sea_ice.model.ice_concentration)
-
-simulation.output_writers[:ice_fields_writer] = 
-             NetCDFWriter(sea_ice.model, sea_ice_outputs;
-                       filename=output_folder*"vel_fields.nc",
-                       schedule = TimeInterval(save_fields_interval),
-                       overwrite_existing = rewrite,
                        )
 
 # Ocean net surface fluxes (momentum + tracers)
@@ -376,7 +396,7 @@ ocean_flux_outputs = (; τx = coupled_model.interfaces.net_fluxes.ocean.u,
                         JT = coupled_model.interfaces.net_fluxes.ocean.T,
                         JS = coupled_model.interfaces.net_fluxes.ocean.S)
 
-simulation.output_writers[:fluxes] = 
+ocean.output_writers[:fluxes] = 
              NetCDFWriter(ocean.model, ocean_flux_outputs;
                        filename = output_folder*"ocean_fluxes.nc",
                        schedule = TimeInterval(save_fields_interval),
@@ -384,7 +404,7 @@ simulation.output_writers[:fluxes] =
                        )
 
 simulation.output_writers[:checkpointer] = 
-    Checkpointer(ocean.model;
+    Checkpointer(simulation.model;
 		 dir = output_folder,
                  schedule=TimeInterval(30days), 
                  prefix="model_checkpoint",
@@ -393,4 +413,4 @@ simulation.output_writers[:checkpointer] =
                  )
 
 println("RUN!")
-run!(simulation)#, pickup=pickup)
+run!(simulation, pickup=pickup)

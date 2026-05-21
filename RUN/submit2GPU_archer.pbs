@@ -19,6 +19,6 @@ cd $SLURM_SUBMIT_DIR
 date
 
 #julia --project run.jl C-10-noise10percent_only_salt_BiH
-julia --project run_ice.jl A-H2-H
+julia --project run_ice.jl A-H5-H-LR_noATM
 
 date
