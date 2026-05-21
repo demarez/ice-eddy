@@ -8,11 +8,12 @@ using Oceananigans.Units
 using Oceananigans.Models: buoyancy_field
 
 using ClimaSeaIce
-using ClimaSeaIce: SeaIceModel, SlabSeaIceThermodynamics, PhaseTransitions, ConductiveFlux
+using ClimaSeaIce: SeaIceModel, PhaseTransitions, ConductiveFlux
 using ClimaSeaIce.SeaIceThermodynamics: IceWaterThermalEquilibrium, PrescribedTemperature
 
 using NumericalEarth.EarthSystemModels: ocean_surface_salinity
 using NumericalEarth.Oceans
+using NumericalEarth.SeaIces: sea_ice_dynamics
 
 using NCDatasets
 using Printf
@@ -136,8 +137,8 @@ damping = Relaxation(rate = 1/1000, mask=edge_mask)
 # =====================
 
 # Sea ice initial conditions
-const h₀ = 0.5   # initial ice thickness (m)
-const ℵ₀ = 0.9   # initial ice concentration
+const h₀ = 0   # initial ice thickness (m)
+const ℵ₀ = 0   # initial ice concentration
 
 # Ocean initial conditions
 
@@ -207,7 +208,7 @@ function build_atmosphere(arch)
 end
 
 atmosphere = build_atmosphere(Oceananigans.Architectures.architecture(grid))
-radiation  = Radiation(ocean_albedo=0.06, sea_ice_albedo=0.7)
+# radiation  = Radiation(ocean_albedo=0.06, sea_ice_albedo=0.7)
 
 cᴰ = 0
 
@@ -285,12 +286,17 @@ ocean = Simulation(ocean_model; Δt, verbose = false)
 
 set!(ocean.model, u=uᵢ, v=vᵢ, T=Tᵢ, S=Sᵢ, η=ηᵢ)
 
-# sea_ice_dyn = sea_ice_dynamics(grid, ocean; sea_ice_ocean_drag_coefficient = 3.24e-3)
+const ocean_rho_ref = 1030
+const ocean_heat_cap = 3991.86795711963
+
+sea_ice_dyn = sea_ice_dynamics(grid, ocean;        
+                            ocean_reference_density=ocean_rho_ref,
+                            sea_ice_ocean_drag_coefficient = 3.24e-3)
 
 sea_ice = sea_ice_simulation(grid, ocean; 
                             advection = WENO(order=7, 
-                            minimum_buffer_upwind_order=1))#,
-                            # dynamics = sea_ice_dyn)
+                            minimum_buffer_upwind_order=1),
+                            dynamics = sea_ice_dyn)
                             
 #sea_ice = FreezingLimitedOceanTemperature()
 
@@ -298,18 +304,19 @@ set!(sea_ice.model, h=h₀, ℵ=ℵ₀)
 
 println("Set up coupled model")
 
-const ocean_rho_ref = 1030
-const ocean_heat_cap = 3991.86795711963
+
 
 # --- Coupled Model ---
-coupled_model = OceanSeaIceModel(ocean, sea_ice; 
-                                 #nothing,
-                                 #nothing,
-                                 #atmosphere, 
-                                 #radiation, 
-                                 atmosphere=nothing, radiation=nothing,
-                                 ocean_reference_density=ocean_rho_ref, 
-                                 ocean_heat_capacity=ocean_heat_cap)
+# coupled_model = OceanSeaIceModel(ocean, sea_ice; 
+#                                  atmosphere, 
+#                                  radiation, 
+#                                  #aatmosphere=nothing, radiation=nothing,
+#                                  ocean_reference_density=ocean_rho_ref, 
+#                                  ocean_heat_capacity=ocean_heat_cap)
+
+coupled_model = EarthSystemModel(nothing, atmosphere, nothing, sea_ice, ocean; 
+                                ocean_reference_density=ocean_rho_ref,
+                                ocean_heat_capacity=ocean_heat_cap)
 
 #coupled_model = OceanSeaIceModel(ocean, sea_ice)
 

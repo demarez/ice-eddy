@@ -34,11 +34,18 @@ and comment the definition:
 #    return merge(velocity_attrs, tracer_attrs)
 #end
 
-This is fixed in the newer version of Oceananigans, but there are some incompatibilities to run this set up in newer versions of ClimaSeaIce and NumericalEarth.
+Another change in the NumericalEarth is to add ocean_reference_density within the parameters of the function.
 
-Make sure to use the versions:
-Status `/data/hpcdata/users/josnez/Oceananigans.jl/ice-eddy/RUN/Project.toml`
-⌃ [6ba0ff68] ClimaSeaIce v0.4.4 (<v0.5.0)
-⌃ [904d977b] NumericalEarth v0.2.0 (<v0.4.1)
-⌅ [9e8cae18] Oceananigans v0.105.5 (<v0.107.7): ClimaSeaIce, NumericalEarth
+function sea_ice_dynamics(grid, ocean=nothing;
+                          sea_ice_ocean_drag_coefficient = 3.24e-3,
+                          rheology = ElastoViscoPlasticRheology(),
+                          coriolis = default_coriolis(ocean),
+                          free_drift = nothing,
+                          ocean_reference_density = ocean_reference_density(ocean),
+                          solver = default_solver(grid, ocean))
+
+    SSU, SSV = ocean_surface_velocities(ocean)
+    FT = eltype(grid)
+    sea_ice_ocean_drag_coefficient = convert(FT, sea_ice_ocean_drag_coefficient)
+    ρₑ = convert(FT, ocean_reference_density)
 
