@@ -844,11 +844,9 @@ version = "1.2.0"
 
 [[deps.NumericalEarth]]
 deps = ["Adapt", "CFTime", "ClimaSeaIce", "CubedSphere", "DataDeps", "Dates", "Distances", "DocStringExtensions", "Downloads", "GPUArraysCore", "Glob", "ImageMorphology", "JLD2", "KernelAbstractions", "LibCURL", "MeshArrays", "NCDatasets", "Oceananigans", "OffsetArrays", "PrecompileTools", "Printf", "Scratch", "SeawaterPolynomials", "StaticArrays", "Statistics", "Thermodynamics", "ZipFile"]
-git-tree-sha1 = "ca58f5990c9ccf410272b8fe76140a6bd9b02f1c"
-repo-rev = "main"
-repo-url = "/users/josnez/github/NumericalEarth.jl"
+path = "/users/josnez/github/NumericalEarth.jl"
 uuid = "904d977b-046a-4731-8b86-9235c0d1ef02"
-version = "0.4.2"
+version = "0.5.3"
 
     [deps.NumericalEarth.extensions]
     NumericalEarthArchGDALExt = "ArchGDAL"

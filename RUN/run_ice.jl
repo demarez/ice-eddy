@@ -163,9 +163,8 @@ vᵢ = get_data("voce")
 
 buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8e-4))
 
-# Coriolis (This is northern hemisphere)
-const f₀ = -0.000143  # s⁻¹
-coriolis = FPlane(f=f₀)
+# Coriolis
+coriolis = FPlane(latitude = -80)
 
 ν = 1e-4
 κ = 1e-4
@@ -208,7 +207,7 @@ function build_atmosphere(arch)
 end
 
 if occursin("noATM",experiment)
-    atmosphere=nothing
+    atmosphere = nothing
 else
     atmosphere = build_atmosphere(Oceananigans.Architectures.architecture(grid))
 end
@@ -245,18 +244,7 @@ drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameter
 u_bcs = FieldBoundaryConditions( top = drag_bc_u )
 v_bcs = FieldBoundaryConditions( top = drag_bc_v )
 
-
 # --- Ocean ---
-#ocean = ocean_simulation(grid;
-#                            Δt,
-#                            coriolis = coriolis,
-#                            closure = closure,
-#                            momentum_advection = WENOVectorInvariant(),
-#                            tracer_advection = WENO(order=7),
-#                            forcing=(u=damping, v=damping))
-
-bottom_drag_coefficient = 0.003
-
 # Set up boundary conditions using Field
 top_zonal_momentum_flux      = τˣ = Field{Face, Center, Nothing}(grid)
 top_meridional_momentum_flux = τʸ = Field{Center, Face, Nothing}(grid)
@@ -274,6 +262,7 @@ boundary_conditions = (u = FieldBoundaryConditions(top=u_top_bc),
                        T = FieldBoundaryConditions(top=T_top_bc),
                        S = FieldBoundaryConditions(top=S_top_bc))
 
+println("Set up Ocean Model")
 
 ocean_model = HydrostaticFreeSurfaceModel( grid;  buoyancy,
                             momentum_advection = WENO(),
@@ -286,45 +275,29 @@ ocean_model = HydrostaticFreeSurfaceModel( grid;  buoyancy,
 
 ocean = Simulation(ocean_model; Δt, verbose = false)
 
-#wizard = TimeStepWizard(cfl=0.5, max_change=1.1, max_Δt=max_dt)
-#ocean.callbacks[:wizard] = Callback(wizard, IterationInterval(10))
-
 set!(ocean.model, u=uᵢ, v=vᵢ, T=Tᵢ, S=Sᵢ, η=ηᵢ)
 
-const ocean_rho_ref = 1030
-const ocean_heat_cap = 3991.86795711963
+#const ocean_rho_ref = 1026
+#const ocean_heat_cap = 3991.86795711963
 
-sea_ice_dyn = sea_ice_dynamics(grid, ocean;        
-                            ocean_reference_density=ocean_rho_ref,
-                            sea_ice_ocean_drag_coefficient = 3.24e-3)
+println("Set up Ice Model")
+
+#sea_ice_dyn = sea_ice_dynamics(grid, ocean;        
+#                            ocean_reference_density=ocean_rho_ref,
+#                            sea_ice_ocean_drag_coefficient = 3.24e-3)
 
 sea_ice = sea_ice_simulation(grid, ocean; 
                             advection = WENO(order=7, 
-                            minimum_buffer_upwind_order=1),
-                            dynamics = sea_ice_dyn)
+                            minimum_buffer_upwind_order=1))
+#                            dynamics = sea_ice_dyn)
                             
-#sea_ice = FreezingLimitedOceanTemperature()
-
 set!(sea_ice.model, h=h₀, ℵ=ℵ₀)
 
 println("Set up coupled model")
 
 
-
 # --- Coupled Model ---
-# coupled_model = OceanSeaIceModel(ocean, sea_ice; 
-#                                  atmosphere, 
-#                                  radiation, 
-#                                  #aatmosphere=nothing, radiation=nothing,
-#                                  ocean_reference_density=ocean_rho_ref, 
-#                                  ocean_heat_capacity=ocean_heat_cap)
-
-
-coupled_model = EarthSystemModel(nothing, atmosphere, nothing, sea_ice, ocean; 
-                                ocean_reference_density=ocean_rho_ref,
-                                ocean_heat_capacity=ocean_heat_cap)
-
-#coupled_model = OceanSeaIceModel(ocean, sea_ice)
+coupled_model = OceanSeaIceModel(ocean, sea_ice;)
 
 simulation    = Simulation(coupled_model; Δt, stop_time=run_time)
 
@@ -364,22 +337,21 @@ vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 
 println("create output fields")
 
-#sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
-#                     ℵ = sea_ice.model.ice_concentration)
+sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
+                     ℵ = sea_ice.model.ice_concentration)
 
-#sea_ice.output_writers[:ice_field_writer] = 
-#             NetCDFWriter(sea_ice.model, sea_ice_outputs;
-#                       filename=output_folder*"ice_fields",
-#                       schedule = TimeInterval(save_fields_interval),
-#                       overwrite_existing = rewrite,
-#                       )
+sea_ice.output_writers[:ice_field_writer] = 
+             NetCDFWriter(sea_ice.model, sea_ice_outputs;
+                       filename=output_folder*"ice_fields",
+                       schedule = TimeInterval(save_fields_interval),
+                       overwrite_existing = rewrite,
+                       )
 
 ocean.output_writers[:tracer_field_writer] =
              NetCDFWriter(ocean.model, tracer_fields; 
                        filename=output_folder*"tracer_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
-#                       file_splitting = TimeInterval(30days),
                        )
 
 ocean.output_writers[:vel_field_writer] =
@@ -387,7 +359,6 @@ ocean.output_writers[:vel_field_writer] =
                        filename=output_folder*"vel_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
-#                       file_splitting = TimeInterval(30days),
                        )
 
 # Ocean net surface fluxes (momentum + tracers)
