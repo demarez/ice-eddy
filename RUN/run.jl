@@ -174,7 +174,7 @@ delta = 1/80
 threshold = 0.001
 edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=threshold )
 damping = Relaxation(rate = 1/1000, mask=edge_mask)
-coriolis = FPlane(f=0.000143) #value at lat=80°N
+coriolis = FPlane(latitude = -80) #value at lat=80°N
 
 
 
