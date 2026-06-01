@@ -137,8 +137,8 @@ damping = Relaxation(rate = 1/1000, mask=edge_mask)
 # =====================
 
 # Sea ice initial conditions
-const h₀ = 0   # initial ice thickness (m)
-const ℵ₀ = 0   # initial ice concentration
+const h₀ = 1   # initial ice thickness (m)
+const ℵ₀ = 0.9   # initial ice concentration
 
 # Ocean initial conditions
 
@@ -177,7 +177,7 @@ println("ScalarBiharmonicDiffusivity")
 
 output_prefix = "OceanIce_periodic"
 
-Δt=5.0
+Δt=2.0
 max_dt = 30second # using automatic submit, this should be in seconds
 run_time = 91days
 
