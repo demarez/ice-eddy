@@ -137,8 +137,8 @@ damping = Relaxation(rate = 1/1000, mask=edge_mask)
 # =====================
 
 # Sea ice initial conditions
-const h₀ = 1   # initial ice thickness (m)
-const ℵ₀ = 0.9   # initial ice concentration
+const h₀ = 0   # initial ice thickness (m)
+const ℵ₀ = 0.0   # initial ice concentration
 
 # Ocean initial conditions
 
@@ -180,39 +180,6 @@ output_prefix = "OceanIce_periodic"
 Δt=2.0
 max_dt = 30second # using automatic submit, this should be in seconds
 run_time = 91days
-
-# --- Atmosphere (fresh instance) ---
-# Atmospheric state (polar winter)
-const Tₐ  = 273.15 - 12  # -12°C in Kelvin
-const u₁₀ = 0            # No winds
-const qₐ  = 0.0        # specific humidity (dry cold air)
-const Qsw = 180.0          # no shortwave (polar winter)
-const Qlw = 230.0        # downwelling longwave (W/m²)
-
-function build_atmosphere(arch)
-    atmosphere_grid  = RectilinearGrid(arch; size = (1, 1),
-                                       x = (0, Lx),
-                                       y = (0, Ly),
-                                       topology = (Periodic, Bounded, Flat))
-    atmosphere_times = range(0, 365days, length=3)
-    atmosphere = PrescribedAtmosphere(atmosphere_grid, atmosphere_times)
-
-    parent(atmosphere.tracers.T)  .= Tₐ
-    parent(atmosphere.velocities.u) .= u₁₀
-    parent(atmosphere.tracers.q)  .= qₐ
-    # parent(atmosphere.downwelling_radiation.shortwave) .= Qsw
-    # parent(atmosphere.downwelling_radiation.longwave)  .= Qlw
-
-    return atmosphere
-end
-
-if occursin("noATM",experiment)
-    atmosphere = nothing
-else
-    atmosphere = build_atmosphere(Oceananigans.Architectures.architecture(grid))
-end
-
-# radiation  = Radiation(ocean_albedo=0.06, sea_ice_albedo=0.7)
 
 cᴰ = 0
 
@@ -276,9 +243,6 @@ ocean_model = HydrostaticFreeSurfaceModel( grid;  buoyancy,
 ocean = Simulation(ocean_model; Δt, verbose = false)
 
 set!(ocean.model, u=uᵢ, v=vᵢ, T=Tᵢ, S=Sᵢ, η=ηᵢ)
-
-#const ocean_rho_ref = 1026
-#const ocean_heat_cap = 3991.86795711963
 
 println("Set up Ice Model")
 
