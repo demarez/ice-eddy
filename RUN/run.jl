@@ -122,19 +122,10 @@ no_slip_field_bcs = FieldBoundaryConditions(no_slip_bc);
 
 #-----#
 
-cᴰ = 0 
 
-if experiment == "AC-6-noise10percent-LR" || experiment == "AC-2-noise10percent" || experiment == "AC-3-noise10percent" || experiment == "AC-6-noise10percent" || experiment == "AC-7-noise10percent" || experiment == "AC-7-LR" || experiment == "C-7-LR"
-    
-    z₀ = 0.01 # m (roughness length) ###the one we vary
-    κ = 0.4  # von Karman constant
-    z₁ = CUDA.@allowscalar -last(znodes(grid, Center())) # Closest grid center to the bottom
-    # Drag coefficient
-    cᴰ = (κ / log(z₁ / z₀))^2 
-    println("some drag")
-#elseif experiment == "test1_window"
-    # Do something else
-#    println("Running test1_window")
+if experiment == "A-S-H-HR-drag1" || experiment == "A-S-L-HR-drag1" || experiment == "A-D-H-HR-drag1" || experiment == "A-D-L-HR-drag1" || experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
+    cᴰ = 3.24e-3
+    println("Drag")
 else
     cᴰ = 0 
     println("No drag")
@@ -148,11 +139,16 @@ Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
 rho = 1026.0
 
-@inline drag_u(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( u - p.Uᵢ) 
-@inline drag_v(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( v - p.Vᵢ)
+#@inline drag_u(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( u - p.Uᵢ) 
+#@inline drag_v(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( v - p.Vᵢ)
+#drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
+#drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
 
-drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
-drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
+@inline drag_u(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( u ) 
+@inline drag_v(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( v )
+drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
+drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
+
 
 u_bcs = FieldBoundaryConditions( top = drag_bc_u )
 v_bcs = FieldBoundaryConditions( top = drag_bc_v )
@@ -180,10 +176,16 @@ edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=thresho
 damping = Relaxation(rate = 1/100, mask=edge_mask)
 coriolis = FPlane(f=0.000143) #value at lat=80°N
 
+if experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
+    ν = 1e-3
+    κ = 1e-3
+else
+    ν = 1e-4
+    κ = 1e-4
+end
 
 
-ν = 1e-4
-κ = 1e-4
+
 closure = ScalarBiharmonicDiffusivity(; ν, κ)
 println("ScalarBiharmonicDiffusivity")
 
