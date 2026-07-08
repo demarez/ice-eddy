@@ -53,8 +53,10 @@ run_time = 45days#91days#181days
 save_fields_interval = 24hour
 path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V4/"
 
+input_expt = split(experiment, "_")[1]
+
 ###define paths
-input_folder = path_root*"init_cond/"*experiment*"/" 
+input_folder = path_root*"init_cond/"*input_expt*"/" 
 init_file = input_folder*"/init_julia.nc"
 output_folder = path_root*"RUN/"*experiment*"/" 
 mkpath(output_folder)
@@ -137,8 +139,17 @@ damping = Relaxation(rate = 1/1000, mask=edge_mask)
 # =====================
 
 # Sea ice initial conditions
-const h₀ = 1.0   # initial ice thickness (m)
-const ℵ₀ = 0.9   # initial ice concentration
+if occursin("0mice", experiment)
+    # Sea ice initial conditions
+    const h₀ = 0   # initial ice thickness (m)
+    const ℵ₀ = 0.0   # initial ice concentration
+    println("Initial ice thickness: ", h₀, " m")
+else
+    const h₀ = 1   # initial ice thickness (m)
+    const ℵ₀ = 0.9   # initial ice concentration
+    println("Initial ice thickness: ", h₀, " m")
+end
+
 
 # Ocean initial conditions
 
@@ -263,7 +274,13 @@ println("Set up coupled model")
 # --- Coupled Model ---
 coupled_model = OceanSeaIceModel(ocean, sea_ice;)
 
-simulation    = Simulation(coupled_model; Δt, stop_time=run_time)
+    
+if occursin("ocean", experiment)
+    println("Ocean only sim.")
+    simulation = ocean = Simulation(ocean_model; Δt, stop_time=run_time)
+else
+    simulation = Simulation(coupled_model; Δt, stop_time=run_time)
+end
 
 function progress(simulation)
     u, v, w = ocean.model.velocities
@@ -301,15 +318,18 @@ vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 
 println("create output fields")
 
-sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
-                     ℵ = sea_ice.model.ice_concentration)
+if !occursin("ocean", experiment)
+    sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
+                        ℵ = sea_ice.model.ice_concentration)
 
-sea_ice.output_writers[:ice_field_writer] = 
-             NetCDFWriter(sea_ice.model, sea_ice_outputs;
-                       filename=output_folder*"ice_fields",
-                       schedule = TimeInterval(save_fields_interval),
-                       overwrite_existing = rewrite,
-                       )
+    sea_ice.output_writers[:ice_field_writer] = 
+                NetCDFWriter(sea_ice.model, sea_ice_outputs;
+                        filename=output_folder*"ice_fields",
+                        schedule = TimeInterval(save_fields_interval),
+                        overwrite_existing = rewrite,
+                        )
+end
+
 
 ocean.output_writers[:tracer_field_writer] =
              NetCDFWriter(ocean.model, tracer_fields; 
