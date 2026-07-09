@@ -123,8 +123,8 @@ no_slip_field_bcs = FieldBoundaryConditions(no_slip_bc);
 
 #-----#
 
-cᴰ = 0 
 
+<<<<<<< HEAD
 if occursin("drag",experiment) 
     z₀ = 0.01 # m (roughness length) ###the one we vary
     κ = 0.4  # von Karman constant
@@ -135,6 +135,11 @@ if occursin("drag",experiment)
 #elseif experiment == "test1_window"
     # Do something else
 #    println("Running test1_window")
+=======
+if experiment == "A-S-H-HR-drag1" || experiment == "A-S-L-HR-drag1" || experiment == "A-D-H-HR-drag1" || experiment == "A-D-L-HR-drag1" || experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
+    cᴰ = 3.24e-3
+    println("Drag")
+>>>>>>> 31df00cefc8ace4352d083b4358f3a39ff9f35eb
 else
     cᴰ = 0 
     println("No drag")
@@ -144,11 +149,16 @@ Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
 rho = 1026.0
 
-@inline drag_u(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( u - p.Uᵢ) 
-@inline drag_v(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( v - p.Vᵢ)
+#@inline drag_u(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( u - p.Uᵢ) 
+#@inline drag_v(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( v - p.Vᵢ)
+#drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
+#drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
 
-drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
-drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
+@inline drag_u(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( u ) 
+@inline drag_v(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( v )
+drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
+drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
+
 
 u_bcs = FieldBoundaryConditions( top = drag_bc_u )
 v_bcs = FieldBoundaryConditions( top = drag_bc_v )
@@ -178,7 +188,18 @@ coriolis = FPlane(latitude = -80) #value at lat=80°N
 
 
 
+<<<<<<< HEAD
 # The commented code below allows for more flexible selection of the turbulence closure.
+=======
+if experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
+    ν = 1e-3
+    κ = 1e-3
+else
+    ν = 1e-4
+    κ = 1e-4
+end
+
+>>>>>>> 31df00cefc8ace4352d083b4358f3a39ff9f35eb
 
 # if occursin("BiH",experiment)
 #     ν = 1e-4
@@ -194,8 +215,6 @@ coriolis = FPlane(latitude = -80) #value at lat=80°N
 #     println("CATKEVerticalDiffusivity")
 # end
 
-ν = 1e-4
-κ = 1e-4
 closure = ScalarBiharmonicDiffusivity(; ν, κ)
 println("ScalarBiharmonicDiffusivity")
 
