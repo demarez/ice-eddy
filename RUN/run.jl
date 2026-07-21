@@ -39,7 +39,7 @@ end
 experiment = ARGS[1]
 run_time = 91days#181days
 save_fields_interval = 24hour
-path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V4/"
+path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V4/"
 
 
 

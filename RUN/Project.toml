@@ -1,9 +1,7 @@
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ClimaSeaIce = "6ba0ff68-24e6-4315-936c-2e99227c95a4"
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
+NumericalEarth = "904d977b-046a-4731-8b86-9235c0d1ef02"
 Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"
 SeawaterPolynomials = "d496a93d-167e-4197-9f49-d3af4ff8fe40"
-
-[extras]
-CUDA_Runtime_jll = "76a88914-d11a-5bdc-97e0-2f5a05c973a2"
