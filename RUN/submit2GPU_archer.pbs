@@ -17,8 +17,10 @@ cd $SLURM_SUBMIT_DIR
 
 date
 
-julia --project run_expts.jl A-D-H-LR
-#julia --project run_expts.jl A-D-H-LR_ocean
-#julia --project run_expts.jl A-D-H-LR_0mice
+#julia --project run_expts.jl A-D-H-otherT2-LR
+#julia --project run_expts.jl A-D-H-otherT2-LR_ocean
+#julia --project run_expts.jl A-D-H-otherT2-LR_0mice
+
+julia --project run_expts.jl A-D-H-charly-HR_ocean
 
 date

@@ -16,6 +16,7 @@ using NumericalEarth.Oceans
 using NumericalEarth.SeaIces: sea_ice_dynamics
 
 using NCDatasets
+using SeawaterPolynomials.TEOS10: TEOS10EquationOfState
 using Printf
 using Base.Filesystem
 
@@ -119,7 +120,7 @@ grid = RectilinearGrid(GPU(),
                        size = (Nx, Ny, Nz),
                        x = (-Lx/2, Lx/2),
                        y = (-Ly/2, Ly/2),
-                       halo = (7, 7, 7),
+                       # halo = (7, 7, 7),
                        z = z_faces,
                        topology = (Bounded, Bounded, Bounded))
 
@@ -132,7 +133,7 @@ f = 0.255
 delta = 1/80
 threshold = 0.001
 edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=threshold )
-damping = Relaxation(rate = 1/1000, mask=edge_mask)
+damping = Relaxation(rate = 1/100, mask=edge_mask)
 
 # =====================
 # Initial conditions
@@ -172,10 +173,14 @@ vᵢ = get_data("voce")
 # Model parameters
 # =====================
 
-buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8e-4))
+# buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8e-4))
+teos10 = TEOS10EquationOfState()
+buoyancy = SeawaterBuoyancy(equation_of_state=teos10)
+
 
 # Coriolis
-coriolis = FPlane(latitude = -80)
+# coriolis = FPlane(latitude = -80)
+coriolis = FPlane(f=0.000143)
 
 ν = 1e-4
 κ = 1e-4
@@ -213,11 +218,10 @@ Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
 rho = 1026.0
 
-@inline drag_u(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( u - p.Uᵢ)
-@inline drag_v(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( v - p.Vᵢ)
-
-drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
-drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
+@inline drag_u(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( u ) 
+@inline drag_v(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( v )
+drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
+drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
 
 u_bcs = FieldBoundaryConditions( top = drag_bc_u )
 v_bcs = FieldBoundaryConditions( top = drag_bc_v )

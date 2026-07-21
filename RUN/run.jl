@@ -4,7 +4,6 @@ using CairoMakie
 using Printf
 using CUDA
 using Oceananigans.TurbulenceClosures: CATKEVerticalDiffusivity
-using Oceananigans.Models: buoyancy_field
 using NCDatasets
 using SeawaterPolynomials.TEOS10: TEOS10EquationOfState
 using Base.Filesystem
@@ -40,7 +39,9 @@ end
 experiment = ARGS[1]
 run_time = 91days#181days
 save_fields_interval = 24hour
-path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V0/"
+path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V4/"
+
+
 
 ###define paths
 input_folder = path_root*"init_cond/"*experiment*"/" 
@@ -68,7 +69,7 @@ stretching = Int(params["stretching"])#40
 type_eddy=Int(params["type_eddy"])
 cyclonic = type_eddy > 0
 
-open("run_"*experiment*".log", "w") do f
+open("run.log", "w") do f
     # Write the parameters to the log file
     for (key, value) in params
         write(f, "$key $value\n")
@@ -109,10 +110,8 @@ grid = RectilinearGrid(GPU(),
                        z = z_faces,
                        topology = (Bounded, Bounded, Bounded))
 
-buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8e-4))
-
-# teos10 = TEOS10EquationOfState()
-# buoyancy = SeawaterBuoyancy(equation_of_state=teos10)
+teos10 = TEOS10EquationOfState()
+buoyancy = SeawaterBuoyancy(equation_of_state=teos10)
 
 #lineq_state = LinearEquationOfState(thermal_expansion=0, haline_contraction=8e-4)
 #lineq_state = LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8.0e-4)
@@ -124,26 +123,17 @@ no_slip_field_bcs = FieldBoundaryConditions(no_slip_bc);
 #-----#
 
 
-<<<<<<< HEAD
-if occursin("drag",experiment) 
-    z₀ = 0.01 # m (roughness length) ###the one we vary
-    κ = 0.4  # von Karman constant
-    z₁ = CUDA.@allowscalar -last(znodes(grid, Center())) # Closest grid center to the bottom
-    # Drag coefficient
-    cᴰ = (κ / log(z₁ / z₀))^2 
-    println("some drag")
-#elseif experiment == "test1_window"
-    # Do something else
-#    println("Running test1_window")
-=======
 if experiment == "A-S-H-HR-drag1" || experiment == "A-S-L-HR-drag1" || experiment == "A-D-H-HR-drag1" || experiment == "A-D-L-HR-drag1" || experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
     cᴰ = 3.24e-3
     println("Drag")
->>>>>>> 31df00cefc8ace4352d083b4358f3a39ff9f35eb
 else
     cᴰ = 0 
     println("No drag")
 end
+
+
+
+
 
 Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
@@ -183,14 +173,9 @@ f = 0.255
 delta = 1/80
 threshold = 0.001
 edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=threshold )
-damping = Relaxation(rate = 1/1000, mask=edge_mask)
-coriolis = FPlane(latitude = -80) #value at lat=80°N
+damping = Relaxation(rate = 1/100, mask=edge_mask)
+coriolis = FPlane(f=0.000143) #value at lat=80°N
 
-
-
-<<<<<<< HEAD
-# The commented code below allows for more flexible selection of the turbulence closure.
-=======
 if experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
     ν = 1e-3
     κ = 1e-3
@@ -199,34 +184,26 @@ else
     κ = 1e-4
 end
 
->>>>>>> 31df00cefc8ace4352d083b4358f3a39ff9f35eb
 
-# if occursin("BiH",experiment)
-#     ν = 1e-4
-#     κ = 1e-4
-#     closure = ScalarBiharmonicDiffusivity(; ν, κ)
-#     #closure = ScalarDiffusivity(; ν, κ)
-#     println("ScalarBiharmonicDiffusivity")
-# #elseif experiment == "test1_window"
-#     # Do something else
-# #    println("Running test1_window")
-# else
-#     closure = CATKEVerticalDiffusivity()
-#     println("CATKEVerticalDiffusivity")
-# end
 
 closure = ScalarBiharmonicDiffusivity(; ν, κ)
 println("ScalarBiharmonicDiffusivity")
 
+#closure = CATKEVerticalDiffusivity()
+#println("CATKEVerticalDiffusivity")
 
-model = HydrostaticFreeSurfaceModel( grid;  buoyancy,
+
+
+
+model = HydrostaticFreeSurfaceModel(; grid, buoyancy,
                             momentum_advection = WENO(),
                             tracer_advection = WENO(),
-                            tracers = (:T, :S),
+                            tracers = (:T, :S, :e),
                             coriolis = coriolis,
                             closure = closure,
                             boundary_conditions=(u=u_bcs, v=v_bcs),
-                            forcing=(u=damping, v=damping))
+                            forcing=(u=damping, v=damping, w=damping)
+)
 
 ds = Dataset(init_file);
 
@@ -251,7 +228,7 @@ max_dt = 30second # using automatic submit, this should be in seconds
 
 simulation = Simulation(model, Δt=1.0, stop_time=run_time)
 
-wizard = TimeStepWizard(cfl=0.5, max_change=1.1, max_Δt=max_dt)
+wizard = TimeStepWizard(cfl=1.0, max_change=1.1, max_Δt=max_dt)
 simulation.callbacks[:wizard] = Callback(wizard, IterationInterval(10))
 
 function progress(simulation)
@@ -268,7 +245,7 @@ function progress(simulation)
     @info msg
     
     # Write to run.log file (append mode)
-    open("run_"*experiment*".log", "a") do f
+    open("run.log", "a") do f
         write(f, msg)
     end
 
@@ -280,7 +257,7 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(1000))
 u, v, w = model.velocities
 
 T,S = model.tracers
-b = buoyancy_field(model)
+b = BuoyancyField(model)
 
 ζ = ∂x(v) - ∂y(u)
 
@@ -293,7 +270,7 @@ vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 println("create output fields")
 
 simulation.output_writers[:tracer_field_writer] =
-             NetCDFWriter(model, tracer_fields; 
+    NetCDFOutputWriter(model, tracer_fields; 
                        filename=output_folder*"tracer_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
@@ -301,7 +278,7 @@ simulation.output_writers[:tracer_field_writer] =
                        )
 
 simulation.output_writers[:vel_field_writer] =
-             NetCDFWriter(model, vel_fields; 
+    NetCDFOutputWriter(model, vel_fields; 
                        filename=output_folder*"vel_fields.nc", 
                        schedule = TimeInterval(save_fields_interval),
                        overwrite_existing = rewrite,
