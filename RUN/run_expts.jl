@@ -16,6 +16,7 @@ using NumericalEarth.Oceans
 using NumericalEarth.SeaIces: sea_ice_dynamics
 
 using NCDatasets
+using SeawaterPolynomials.TEOS10: TEOS10EquationOfState
 using Printf
 using Base.Filesystem
 
@@ -53,8 +54,10 @@ run_time = 45days#91days#181days
 save_fields_interval = 24hour
 path_root="/data/hpcflash/users/josnez/Oceananigans/ICE-EDDY_wJ/V4/"
 
+input_expt = split(experiment, "_")[1]
+
 ###define paths
-input_folder = path_root*"init_cond/"*experiment*"/" 
+input_folder = path_root*"init_cond/"*input_expt*"/" 
 init_file = input_folder*"/init_julia.nc"
 output_folder = path_root*"RUN/"*experiment*"/" 
 mkpath(output_folder)
@@ -117,7 +120,7 @@ grid = RectilinearGrid(GPU(),
                        size = (Nx, Ny, Nz),
                        x = (-Lx/2, Lx/2),
                        y = (-Ly/2, Ly/2),
-                       halo = (7, 7, 7),
+                       # halo = (7, 7, 7),
                        z = z_faces,
                        topology = (Bounded, Bounded, Bounded))
 
@@ -130,15 +133,24 @@ f = 0.255
 delta = 1/80
 threshold = 0.001
 edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=threshold )
-damping = Relaxation(rate = 1/1000, mask=edge_mask)
+damping = Relaxation(rate = 1/100, mask=edge_mask)
 
 # =====================
 # Initial conditions
 # =====================
 
 # Sea ice initial conditions
-const h₀ = 1.0   # initial ice thickness (m)
-const ℵ₀ = 0.9   # initial ice concentration
+if occursin("0mice", experiment)
+    # Sea ice initial conditions
+    const h₀ = 0   # initial ice thickness (m)
+    const ℵ₀ = 0.0   # initial ice concentration
+    println("Initial ice thickness: ", h₀, " m")
+else
+    const h₀ = 1   # initial ice thickness (m)
+    const ℵ₀ = 0.9   # initial ice concentration
+    println("Initial ice thickness: ", h₀, " m")
+end
+
 
 # Ocean initial conditions
 
@@ -161,10 +173,14 @@ vᵢ = get_data("voce")
 # Model parameters
 # =====================
 
-buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8e-4))
+# buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8e-4))
+teos10 = TEOS10EquationOfState()
+buoyancy = SeawaterBuoyancy(equation_of_state=teos10)
+
 
 # Coriolis
-coriolis = FPlane(latitude = -80)
+# coriolis = FPlane(latitude = -80)
+coriolis = FPlane(f=0.000143)
 
 ν = 1e-4
 κ = 1e-4
@@ -202,11 +218,10 @@ Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
 rho = 1026.0
 
-@inline drag_u(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( u - p.Uᵢ)
-@inline drag_v(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( v - p.Vᵢ)
-
-drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
-drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
+@inline drag_u(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( u ) 
+@inline drag_v(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( v )
+drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
+drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ)) 
 
 u_bcs = FieldBoundaryConditions( top = drag_bc_u )
 v_bcs = FieldBoundaryConditions( top = drag_bc_v )
@@ -263,7 +278,13 @@ println("Set up coupled model")
 # --- Coupled Model ---
 coupled_model = OceanSeaIceModel(ocean, sea_ice;)
 
-simulation    = Simulation(coupled_model; Δt, stop_time=run_time)
+    
+if occursin("ocean", experiment)
+    println("Ocean only sim.")
+    simulation = ocean = Simulation(ocean_model; Δt, stop_time=run_time)
+else
+    simulation = Simulation(coupled_model; Δt, stop_time=run_time)
+end
 
 function progress(simulation)
     u, v, w = ocean.model.velocities
@@ -301,15 +322,18 @@ vel_fields = Dict("U" => u, "V" => v, "vort" => ζ);
 
 println("create output fields")
 
-sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
-                     ℵ = sea_ice.model.ice_concentration)
+if !occursin("ocean", experiment)
+    sea_ice_outputs = (; h = sea_ice.model.ice_thickness,
+                        ℵ = sea_ice.model.ice_concentration)
 
-sea_ice.output_writers[:ice_field_writer] = 
-             NetCDFWriter(sea_ice.model, sea_ice_outputs;
-                       filename=output_folder*"ice_fields",
-                       schedule = TimeInterval(save_fields_interval),
-                       overwrite_existing = rewrite,
-                       )
+    sea_ice.output_writers[:ice_field_writer] = 
+                NetCDFWriter(sea_ice.model, sea_ice_outputs;
+                        filename=output_folder*"ice_fields",
+                        schedule = TimeInterval(save_fields_interval),
+                        overwrite_existing = rewrite,
+                        )
+end
+
 
 ocean.output_writers[:tracer_field_writer] =
              NetCDFWriter(ocean.model, tracer_fields; 

@@ -11,14 +11,16 @@
 #SBATCH --gres=gpu:1
 #SBATCH --nodelist=bsl-node-s22
 
-
 export JULIA_CUDA_MEMORY_POOL=none
 
 cd $SLURM_SUBMIT_DIR
 
 date
 
-#julia --project run.jl C-10-noise10percent_only_salt_BiH
-julia --project run_ice.jl A-D-H-HR
+#julia --project run_expts.jl A-D-H-otherT2-LR
+#julia --project run_expts.jl A-D-H-otherT2-LR_ocean
+#julia --project run_expts.jl A-D-H-otherT2-LR_0mice
+
+julia --project run_expts.jl A-D-H-charly-HR_ocean
 
 date
