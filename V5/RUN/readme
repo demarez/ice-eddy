@@ -1,0 +1,21 @@
+some points from my experience.
+
+I am in csh, so to set the env variable do 
+setenv JULIA_CUDA_MEMORY_POOL none
+
+] doit etre tapé, c'est pas ok un copier/coller !!
+
+julia --project=. 
+
+
+pour lancer mon .jl de test en interactif : julia --project ocean_hydro_only_test.jl test true
+
+
+run in interactive mode : 
+with gpu
+
+qsub -I -q gpuq -l walltime=00:30:00
+
+
+with mpi 
+qsub -I -q mpi_1 -l select=1:ncpus=28:mpiprocs=28:mem=120g -l walltime=12:00:00
