@@ -17,6 +17,7 @@ module load cuda/12.1u1
 conda activate julia_env
 
 setenv JULIA_CUDA_MEMORY_POOL none
-julia --project run.jl A-D-H-otherT2-HR
+julia --project run.jl A-D-H-LR
+julia --project run.jl A-D-H-drag-LR
 
 date

@@ -39,7 +39,7 @@ end
 experiment = ARGS[1]
 run_time = 91days#181days
 save_fields_interval = 24hour
-path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V4/"
+path_root="/home/datawork-lops-osi/cdemarez/5_SECTION19/ICE-EDDY_wJ/V5/"
 
 
 
@@ -67,7 +67,6 @@ refinement = Int(params["refinement"])#4
 stretching = Int(params["stretching"])#40 
 
 type_eddy=Int(params["type_eddy"])
-cyclonic = type_eddy > 0
 
 open("run.log", "w") do f
     # Write the parameters to the log file
@@ -112,18 +111,13 @@ grid = RectilinearGrid(GPU(),
 
 teos10 = TEOS10EquationOfState()
 buoyancy = SeawaterBuoyancy(equation_of_state=teos10)
-
-#lineq_state = LinearEquationOfState(thermal_expansion=0, haline_contraction=8e-4)
-#lineq_state = LinearEquationOfState(thermal_expansion=2.8e-4, haline_contraction=8.0e-4)
-#buoyancy = SeawaterBuoyancy(equation_of_state=lineq_state)
-
 no_slip_bc = ValueBoundaryCondition(0.0)
 no_slip_field_bcs = FieldBoundaryConditions(no_slip_bc);
 
 #-----#
 
 
-if experiment == "A-S-H-HR-drag1" || experiment == "A-S-L-HR-drag1" || experiment == "A-D-H-HR-drag1" || experiment == "A-D-L-HR-drag1" || experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
+if occursin("drag",experiment)
     cᴰ = 3.24e-3
     println("Drag")
 else
@@ -133,16 +127,9 @@ end
 
 
 
-
-
 Uᵢ = 0 # m s⁻¹
 Vᵢ = 0 # m s⁻¹
 rho = 1026.0
-
-#@inline drag_u(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( u - p.Uᵢ) 
-#@inline drag_v(x, y, t, u, v, p) =  p.rho * p.cᴰ * √((u - p.Uᵢ)^2 + (v - p.Vᵢ)^2) * ( v - p.Vᵢ)
-#drag_bc_u = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
-#drag_bc_v = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; cᴰ, Uᵢ, Vᵢ, rho))
 
 @inline drag_u(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( u ) 
 @inline drag_v(x, y, t, u, v, p) =  p.cᴰ * √((u)^2 + (v)^2) * ( v )
@@ -154,19 +141,8 @@ u_bcs = FieldBoundaryConditions( top = drag_bc_u )
 v_bcs = FieldBoundaryConditions( top = drag_bc_v )
 
 
-# --- Edge Damping Setup ---
-# A sponge layer is applied near the domain edges to damp velocities and prevent unphysical reflections.
-# The damping is controlled by:
-#   - EdgeMask{:xy}: Defines a smooth transition from full damping (A=1) at the edges to no damping (0) in the interior.
-#     Parameters:
-#       A=1: Amplitude of the mask.
-#       f=0.255: Fraction of the domain width over which damping is applied.
-#       delta=1/80: Sharpness of the transition between damped and undamped regions.
-#       Lx, Ly: Domain extents in x and y directions.
-#       threshold=0.001: Minimum mask value to avoid numerical issues.
-#   - Relaxation: Applies a damping force proportional to the velocity, scaled by the mask.
-#     rate=1/100: Relaxation timescale (100 time units).
-# The damping is applied to u, v, and w velocities via the `forcing` keyword in the model.
+
+
 
 A = 1
 f = 0.255
@@ -174,24 +150,16 @@ delta = 1/80
 threshold = 0.001
 edge_mask = EdgeMask{:xy}(A=A, f=f, delta=delta, Lx=Lx, Ly=Ly, threshold=threshold )
 damping = Relaxation(rate = 1/100, mask=edge_mask)
-coriolis = FPlane(f=0.000143) #value at lat=80°N
-
-if experiment == "A-S-H-HR-drag1-nuH" || experiment == "A-S-L-HR-drag1-nuH" || experiment == "A-D-H-HR-drag1-nuH" || experiment == "A-D-L-HR-drag1-nuH"
-    ν = 1e-3
-    κ = 1e-3
-else
-    ν = 1e-4
-    κ = 1e-4
-end
 
 
 
+coriolis = FPlane(latitude = -80)
+# or coriolis = FPlane(f=-0.000143)
+
+ν = 1e-4
+κ = 1e-4
 closure = ScalarBiharmonicDiffusivity(; ν, κ)
 println("ScalarBiharmonicDiffusivity")
-
-#closure = CATKEVerticalDiffusivity()
-#println("CATKEVerticalDiffusivity")
-
 
 
 
